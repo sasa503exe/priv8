@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agiota Control PRO</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: sans-serif; background-color: #fef5c3; color: #111; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button { margin: 0.5rem 0; display: block; width: 100%; padding: 0.5rem; }
+    .divida-item { margin-bottom: 1.5rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Agiota Control PRO</h1>
+  <div id="login-area">
+    <input id="senha" type="password" placeholder="Digite a senha" />
+    <button onclick="login()">Entrar</button>
+  </div>
+  <div id="main" style="display:none;">
+    <h2>Nova Dívida</h2>
+    <input id="nome" placeholder="Nome do devedor">
+    <input id="valor" placeholder="Valor (R$)" type="number">
+    <input id="data" placeholder="Data de vencimento" type="date">
+    <input id="whatsapp" placeholder="WhatsApp (ex: 51999999999)">
+    <button onclick="adicionarDivida()">Cadastrar</button>
+    <hr>
+    <div id="app"></div>
+  </div>
+  <script>
+    const senhaCorreta = "agiota123";
+    let dividas = JSON.parse(localStorage.getItem('dividas')) || [];
+
+    function salvarDividas() {
+      localStorage.setItem('dividas', JSON.stringify(dividas));
+    }
+
+    function login() {
+      const inputSenha = document.getElementById("senha").value;
+      if (inputSenha === senhaCorreta) {
+        document.getElementById("login-area").style.display = "none";
+        document.getElementById("main").style.display = "block";
+        render();
+      } else {
+        alert("Senha incorreta!");
+      }
+    }
+
+    function adicionarDivida() {
+      const nome = document.getElementById("nome").value;
+      const valor = document.getElementById("valor").value;
+      const data = document.getElementById("data").value;
+      const whatsapp = document.getElementById("whatsapp").value;
+
+      if (!nome || !valor || !data || !whatsapp) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      dividas.push({ nome, valor, data, whatsapp, pago: false });
+      salvarDividas();
+      render();
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      app.innerHTML = '';
+      if (dividas.length === 0) {
+        app.innerHTML = "<p>Nenhuma dívida cadastrada.</p>";
+        return;
+      }
+
+      dividas.forEach((d, i) => {
+        const el = document.createElement("div");
+        el.className = "divida-item";
+        el.innerHTML = `
+          <strong>${d.nome}</strong><br>
+          Valor: R$ ${d.valor}<br>
+          Vencimento: ${d.data}<br>
+          WhatsApp: ${d.whatsapp}<br>
+          ${d.pago ? "<span style='color:green;'>✔ Pago</span><br>" : ""}
+          <button onclick="marcarPago(${i})">Marcar como pago</button>
+          <button onclick="excluirDivida(${i})">Excluir</button>
+          <button onclick="cobrarZap('${d.whatsapp}', '${d.nome}', '${d.valor}')">Cobrar no Zap</button>
+        `;
+        app.appendChild(el);
+      });
+    }
+
+    function marcarPago(i) {
+      dividas[i].pago = true;
+      salvarDividas();
+      render();
+    }
+
+    function excluirDivida(i) {
+      if (confirm("Tem certeza que deseja excluir esta dívida?")) {
+        dividas.splice(i, 1);
+        salvarDividas();
+        render();
+      }
+    }
+
+    function cobrarZap(num, nome, valor) {
+      const numero = num.replace(/\D/g, "");
+      const texto = encodeURIComponent(`Olá ${nome}, estou passando para lembrar da dívida de R$${valor}, vencida hoje.`);
+      window.open(`https://wa.me/55${numero}?text=${texto}`, "_blank");
+    }
+  </script>
+</body>
+</html>
