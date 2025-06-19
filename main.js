@@ -99,7 +99,7 @@ function renderDevedores() {
   const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((new Date() - venc) / (1000 * 60 * 60 * 24)));
-    const taxaDiaria = d.juros / 100 / 30; // Converte juros mensal para diária (aprox. 30 dias)
+    const taxaDiaria = d.juros / 100 / 30; // Converte juros mensal pra diária
     return sum + (d.valor * (1 + taxaDiaria * diasAtraso));
   }, 0);
   const saldoAtual = saldo + totalDevido;
@@ -129,9 +129,9 @@ function renderListaDevedores(dividas) {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
     const vencido = hoje > venc;
-    const taxaDiaria = d.juros / 100 / 30; // Juros mensal dividido por 30 dias
-    const valorJuros = d.valor * taxaDiaria * diasAtraso; // Valor dos juros
-    const valorFinal = d.valor + valorJuros; // Valor inicial + juros
+    const taxaDiaria = d.juros / 100 / 30; // Juros diário aproximado
+    const valorJuros = d.valor * taxaDiaria * diasAtraso; // Juros acumulados
+    const valorFinal = d.valor + valorJuros; // Valor total com juros
 
     return `
       <div class="bg-white p-4 rounded shadow mb-2">
@@ -161,14 +161,27 @@ function renderGerarDivida() {
         <input placeholder="Nome do devedor" id="nome" class="border p-2 w-full mb-2">
         <input placeholder="Número do devedor" id="numero" class="border p-2 w-full mb-2">
         <input placeholder="Valor emprestado" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
-        <input placeholder="Juros mensal (%)" id="juros" type="number" step="0.1" class="border p-2 w-full mb-2">
-        <input placeholder="Data do empréstimo" id="data" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
-        <input placeholder="Data de vencimento" id="vencimento" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
+        <input placeholder="Juros mensal (%)" id="juros" type="number" step="0.1" min="0" max="99.9" class="border p-2 w-full mb-2">
+        <input placeholder="Data do empréstimo" id="data" type="text" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/aaaa" class="border p-2 w-full mb-2">
+        <button id="definirPrazo" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Definir Prazo (20 ou 30 dias)</button>
+        <select id="prazo" class="border p-2 w-full mb-2 hidden">
+          <option value="20">20 dias</option>
+          <option value="30">30 dias</option>
+        </select>
         <button id="addDivida" class="bg-yellow-500 text-black px-4 py-2 rounded">Salvar dívida</button>
       </div>
       <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
     </div>
   `;
+
+  const definirPrazoBtn = document.getElementById("definirPrazo");
+  const prazoSelect = document.getElementById("prazo");
+  definirPrazoBtn.onclick = () => {
+    prazoSelect.classList.toggle("hidden");
+    if (!prazoSelect.classList.contains("hidden")) {
+      prazoSelect.focus();
+    }
+  };
 
   document.getElementById("addDivida").onclick = () => {
     const nome = document.getElementById("nome").value.trim();
@@ -176,7 +189,9 @@ function renderGerarDivida() {
     const valor = parseFloat(document.getElementById("valor").value);
     const juros = parseFloat(document.getElementById("juros").value);
     const data = document.getElementById("data").value;
-    const vencimento = document.getElementById("vencimento").value;
+    const prazo = document.getElementById("prazo").value;
+    const [dia, mes, ano] = data.split('/').map(Number);
+    const vencimento = new Date(ano, mes - 1, dia + parseInt(prazo)).toISOString().split('T')[0];
 
     if (!nome) {
       showToast("Insira o nome do devedor!");
@@ -186,12 +201,12 @@ function renderGerarDivida() {
       showToast("Valor deve ser maior que zero!");
       return;
     }
-    if (isNaN(juros) || juros < 0) {
-      showToast("Juros deve ser zero ou positivo!");
+    if (isNaN(juros) || juros < 0 || juros > 99.9) {
+      showToast("Juros deve ser entre 0 e 99.9%!");
       return;
     }
-    if (!data || !vencimento) {
-      showToast("Preencha as datas!");
+    if (!data.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      showToast("Data inválida! Use dd/mm/aaaa.");
       return;
     }
     if (new Date(data) >= new Date(vencimento)) {
@@ -220,14 +235,27 @@ function editarDivida(id) {
         <input value="${divida.nome}" id="nome" class="border p-2 w-full mb-2">
         <input value="${divida.numero || ''}" id="numero" class="border p-2 w-full mb-2">
         <input value="${divida.valor}" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
-        <input value="${divida.juros}" id="juros" type="number" step="0.1" class="border p-2 w-full mb-2">
-        <input value="${divida.data}" id="data" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
-        <input value="${divida.vencimento}" id="vencimento" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
+        <input value="${divida.juros}" id="juros" type="number" step="0.1" min="0" max="99.9" class="border p-2 w-full mb-2">
+        <input value="${formatarData(new Date(divida.data)).replace(/(\d+)\/(\d+)\/(\d+)/, '$1/$2/$3')}" id="data" type="text" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/aaaa" class="border p-2 w-full mb-2">
+        <button id="definirPrazo" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Definir Prazo (20 ou 30 dias)</button>
+        <select id="prazo" class="border p-2 w-full mb-2 hidden">
+          <option value="20">20 dias</option>
+          <option value="30">30 dias</option>
+        </select>
         <button id="salvarDivida" class="bg-yellow-500 text-black px-4 py-2 rounded">Salvar</button>
       </div>
       <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
     </div>
   `;
+
+  const definirPrazoBtn = document.getElementById("definirPrazo");
+  const prazoSelect = document.getElementById("prazo");
+  definirPrazoBtn.onclick = () => {
+    prazoSelect.classList.toggle("hidden");
+    if (!prazoSelect.classList.contains("hidden")) {
+      prazoSelect.focus();
+    }
+  };
 
   document.getElementById("salvarDivida").onclick = () => {
     const nome = document.getElementById("nome").value.trim();
@@ -235,7 +263,9 @@ function editarDivida(id) {
     const valor = parseFloat(document.getElementById("valor").value);
     const juros = parseFloat(document.getElementById("juros").value);
     const data = document.getElementById("data").value;
-    const vencimento = document.getElementById("vencimento").value;
+    const prazo = document.getElementById("prazo").value;
+    const [dia, mes, ano] = data.split('/').map(Number);
+    const vencimento = new Date(ano, mes - 1, dia + parseInt(prazo)).toISOString().split('T')[0];
 
     if (!nome) {
       showToast("Insira o nome do devedor!");
@@ -245,12 +275,12 @@ function editarDivida(id) {
       showToast("Valor deve ser maior que zero!");
       return;
     }
-    if (isNaN(juros) || juros < 0) {
-      showToast("Juros deve ser zero ou positivo!");
+    if (isNaN(juros) || juros < 0 || juros > 99.9) {
+      showToast("Juros deve ser entre 0 e 99.9%!");
       return;
     }
-    if (!data || !vencimento) {
-      showToast("Preencha as datas!");
+    if (!data.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      showToast("Data inválida! Use dd/mm/aaaa.");
       return;
     }
     if (new Date(data) >= new Date(vencimento)) {
