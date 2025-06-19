@@ -30,7 +30,7 @@ function renderLogin() {
 
   document.getElementById("entrar").onclick = () => {
     const email = document.getElementById("email").value.trim();
-    const senha = document.getElementById("senha").value;
+    const senha = document.getElementById("senha").value.trim();
     if (!email || !senha) {
       showToast("Preencha email e senha!");
       return;
