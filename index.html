@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agiota Control PRO v3.1.5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/imask"></script>
+</head>
+<body class="bg-yellow-100 min-h-screen text-gray-800">
+  <div class="max-w-xl mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center text-red-600 mb-4">Agiota Control PRO</h1>
+
+    <!-- LOGIN -->
+    <div id="login" class="flex flex-col gap-2">
+      <input type="password" id="senha" placeholder="Senha" class="p-2 border rounded">
+      <button onclick="login()" class="bg-red-600 text-white py-2 rounded">Entrar</button>
+    </div>
+
+    <!-- MENU -->
+    <div id="menu" class="hidden flex flex-col gap-2">
+      <input id="capital" type="number" class="p-2 border rounded" placeholder="Capital Inicial" />
+      <button onclick="mostrar('nova')" class="bg-yellow-500 py-2 rounded">Gerar Dívida</button>
+      <button onclick="mostrar('devedores')" class="bg-yellow-400 py-2 rounded">Ver Devedores</button>
+      <button onclick="logout()" class="bg-gray-400 py-2 rounded">Sair</button>
+    </div>
+
+    <!-- FORMULARIO -->
+    <div id="nova" class="hidden mt-4">
+      <h2 class="text-xl font-semibold mb-2">Nova Dívida</h2>
+      <div id="erro" class="hidden bg-red-200 text-red-800 p-2 mb-2 rounded"></div>
+      <input id="nome" placeholder="Nome" class="p-2 border rounded w-full mb-1" />
+      <input id="zap" placeholder="WhatsApp" class="p-2 border rounded w-full mb-1" />
+      <input id="valor" placeholder="Valor (R$)" type="number" class="p-2 border rounded w-full mb-1" />
+      <input id="juros" placeholder="Juros mensal (%)" type="number" class="p-2 border rounded w-full mb-1" />
+      <input id="vencimento" placeholder="DD/MM/AAAA" class="p-2 border rounded w-full mb-1" />
+      <input id="edit_index" type="hidden">
+      <button onclick="salvarDivida()" class="bg-green-600 text-white w-full py-2 rounded">Salvar</button>
+      <button onclick="limparFormulario()" class="mt-2 bg-gray-300 text-black w-full py-2 rounded">Limpar Formulário</button>
+      <button onclick="mostrar('menu')" class="mt-2 bg-blue-200 py-2 rounded">Voltar ao Menu</button>
+    </div>
+
+    <!-- DEVEDORES -->
+    <div id="devedores" class="hidden mt-4">
+      <h2 class="text-xl font-semibold mb-2">Devedores</h2>
+      <div id="lista" class="flex flex-col gap-3"></div>
+      <button onclick="mostrar('menu')" class="mt-4 bg-blue-200 py-2 rounded">Voltar ao Menu</button>
+    </div>
+  </div>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
