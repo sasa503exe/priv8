@@ -104,7 +104,7 @@ function renderMenu() {
 function renderDevedores() {
   const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
   const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
-  const hoje = new Date("2025-06-19T18:30:00-03:00"); // Data atual fixa pra teste
+  const hoje = new Date("2025-06-19T18:39:00-03:00"); // Data atual ajustada
   const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
@@ -134,7 +134,7 @@ function renderListaDevedores(dividas) {
     return;
   }
 
-  const hoje = new Date("2025-06-19T18:30:00-03:00"); // Data atual fixa pra teste
+  const hoje = new Date("2025-06-19T18:39:00-03:00"); // Data atual ajustada
   container.innerHTML = dividas.map(d => {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
@@ -171,7 +171,7 @@ function renderGerarDivida() {
         <input placeholder="Nome do devedor" id="nome" class="border p-2 w-full mb-2">
         <input placeholder="Número do devedor" id="numero" class="border p-2 w-full mb-2">
         <input placeholder="Valor emprestado" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
-        <input placeholder="Juros mensal (%)" id="juros" type="number" step="0.1" min="0" max="99.9" class="border p-2 w-full mb-2">
+        <input placeholder="Juros mensal (%)" id="juros" type="number" min="20" max="30" class="border p-2 w-full mb-2">
         <input placeholder="Data do empréstimo (dd/mm/aaaa)" id="data" type="text" pattern="\d{2}/\d{2}/\d{4}" class="border p-2 w-full mb-2">
         <button id="definirPrazo" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Definir Prazo</button>
         <select id="prazo" class="border p-2 w-full mb-2 hidden">
@@ -197,7 +197,7 @@ function renderGerarDivida() {
     const nome = document.getElementById("nome").value.trim();
     const numero = document.getElementById("numero").value.trim();
     const valor = parseFloat(document.getElementById("valor").value);
-    const juros = parseFloat(document.getElementById("juros").value);
+    const juros = parseInt(document.getElementById("juros").value);
     const dataStr = document.getElementById("data").value.trim();
     const prazo = document.getElementById("prazo").value;
     const data = validarData(dataStr);
@@ -212,8 +212,8 @@ function renderGerarDivida() {
       showToast("Valor deve ser maior que zero!");
       return;
     }
-    if (isNaN(juros) || juros < 0 || juros > 99.9) {
-      showToast("Juros deve ser entre 0 e 99.9%!");
+    if (isNaN(juros) || ![20, 30].includes(juros)) {
+      showToast("Juros deve ser 20% ou 30%!");
       return;
     }
     if (!data) {
@@ -246,7 +246,7 @@ function editarDivida(id) {
         <input value="${divida.nome}" id="nome" class="border p-2 w-full mb-2">
         <input value="${divida.numero || ''}" id="numero" class="border p-2 w-full mb-2">
         <input value="${divida.valor}" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
-        <input value="${divida.juros}" id="juros" type="number" step="0.1" min="0" max="99.9" class="border p-2 w-full mb-2">
+        <input value="${divida.juros}" id="juros" type="number" min="20" max="30" class="border p-2 w-full mb-2">
         <input value="${divida.data}" id="data" type="text" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/aaaa" class="border p-2 w-full mb-2">
         <button id="definirPrazo" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Definir Prazo</button>
         <select id="prazo" class="border p-2 w-full mb-2 hidden">
@@ -272,7 +272,7 @@ function editarDivida(id) {
     const nome = document.getElementById("nome").value.trim();
     const numero = document.getElementById("numero").value.trim();
     const valor = parseFloat(document.getElementById("valor").value);
-    const juros = parseFloat(document.getElementById("juros").value);
+    const juros = parseInt(document.getElementById("juros").value);
     const dataStr = document.getElementById("data").value.trim();
     const prazo = document.getElementById("prazo").value;
     const data = validarData(dataStr);
@@ -287,8 +287,8 @@ function editarDivida(id) {
       showToast("Valor deve ser maior que zero!");
       return;
     }
-    if (isNaN(juros) || juros < 0 || juros > 99.9) {
-      showToast("Juros deve ser entre 0 e 99.9%!");
+    if (isNaN(juros) || ![20, 30].includes(juros)) {
+      showToast("Juros deve ser 20% ou 30%!");
       return;
     }
     if (!data) {
