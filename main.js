@@ -99,7 +99,7 @@ function renderDevedores() {
   const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((new Date() - venc) / (1000 * 60 * 60 * 24)));
-    const taxaDiaria = d.juros / 100 / 30;
+    const taxaDiaria = d.juros / 100 / 30; // Converte juros mensal para diária (aprox. 30 dias)
     return sum + (d.valor * (1 + taxaDiaria * diasAtraso));
   }, 0);
   const saldoAtual = saldo + totalDevido;
@@ -129,8 +129,9 @@ function renderListaDevedores(dividas) {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
     const vencido = hoje > venc;
-    const taxaDiaria = d.juros / 100 / 30;
-    const valorFinal = d.valor * (1 + taxaDiaria * diasAtraso);
+    const taxaDiaria = d.juros / 100 / 30; // Juros mensal dividido por 30 dias
+    const valorJuros = d.valor * taxaDiaria * diasAtraso; // Valor dos juros
+    const valorFinal = d.valor + valorJuros; // Valor inicial + juros
 
     return `
       <div class="bg-white p-4 rounded shadow mb-2">
@@ -138,7 +139,8 @@ function renderListaDevedores(dividas) {
         <div class="text-sm">Telefone: ${d.numero || 'Não informado'}</div>
         <div class="text-sm">Valor inicial: ${formatarMoeda(d.valor)}</div>
         <div class="text-sm">Vencimento: ${formatarData(d.vencimento)}</div>
-        <div class="text-sm">Total ${vencido ? `(com juros, ${diasAtraso} dias)` : ''}: ${formatarMoeda(valorFinal)}</div>
+        <div class="text-sm">Juros: ${formatarMoeda(valorJuros)}</div>
+        <div class="text-sm">Total ${vencido ? `(atraso ${diasAtraso} dias)` : ''}: ${formatarMoeda(valorFinal)}</div>
         ${vencido && !d.pago ? `<div class="text-sm text-red-600">Atraso: ${diasAtraso} dias</div>` : ''}
         <div class="mt-2 flex gap-2">
           ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : ''}
@@ -160,8 +162,8 @@ function renderGerarDivida() {
         <input placeholder="Número do devedor" id="numero" class="border p-2 w-full mb-2">
         <input placeholder="Valor emprestado" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
         <input placeholder="Juros mensal (%)" id="juros" type="number" step="0.1" class="border p-2 w-full mb-2">
-        <input placeholder="Data do empréstimo" id="data" type="date" class="border p-2 w-full mb-2">
-        <input placeholder="Data de vencimento" id="vencimento" type="date" class="border p-2 w-full mb-2">
+        <input placeholder="Data do empréstimo" id="data" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
+        <input placeholder="Data de vencimento" id="vencimento" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
         <button id="addDivida" class="bg-yellow-500 text-black px-4 py-2 rounded">Salvar dívida</button>
       </div>
       <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
@@ -219,8 +221,8 @@ function editarDivida(id) {
         <input value="${divida.numero || ''}" id="numero" class="border p-2 w-full mb-2">
         <input value="${divida.valor}" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
         <input value="${divida.juros}" id="juros" type="number" step="0.1" class="border p-2 w-full mb-2">
-        <input value="${divida.data}" id="data" type="date" class="border p-2 w-full mb-2">
-        <input value="${divida.vencimento}" id="vencimento" type="date" class="border p-2 w-full mb-2">
+        <input value="${divida.data}" id="data" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
+        <input value="${divida.vencimento}" id="vencimento" type="date" lang="pt-BR" class="border p-2 w-full mb-2">
         <button id="salvarDivida" class="bg-yellow-500 text-black px-4 py-2 rounded">Salvar</button>
       </div>
       <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
