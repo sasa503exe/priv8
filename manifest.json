@@ -1,0 +1,10 @@
+
+{
+  "name": "Agiota Control PRO v2",
+  "short_name": "AgiotaV2",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fef5c3",
+  "theme_color": "#fef5c3",
+  "icons": []
+}

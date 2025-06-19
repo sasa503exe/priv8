@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agiota Control PRO v2</title>
+  <style>
+    body { font-family: sans-serif; background: #fef5c3; padding: 2rem; max-width: 800px; margin: auto; }
+    input, button { display: block; margin: 0.5rem 0; width: 100%; padding: 0.5rem; }
+    .devedor { background: white; padding: 1rem; border-radius: 6px; box-shadow: 0 0 6px #ccc; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Agiota Control PRO v2</h1>
+  <div id="login-area">
+    <input type="password" id="senha" placeholder="Senha de acesso" />
+    <button onclick="login()">Entrar</button>
+  </div>
+  <div id="main" style="display:none;">
+    <h2>Adicionar Devedor</h2>
+    <input id="nome" placeholder="Nome do devedor" />
+    <input id="whatsapp" placeholder="WhatsApp (ex: 11999998888)" />
+    <input id="valor" placeholder="Valor emprestado" type="number" />
+    <input id="juros" placeholder="Juros mensal (%)" type="number" />
+    <input id="vencimento" placeholder="Data de vencimento" type="date" />
+    <button onclick="adicionarDevedor()">Registrar Dívida</button>
+    <hr />
+    <h2>Lista de Devedores</h2>
+    <div id="lista"></div>
+  </div>
+  <script>
+    const senha = "agiota123";
+    let devedores = JSON.parse(localStorage.getItem("devedores")) || [];
+
+    function salvar() {
+      localStorage.setItem("devedores", JSON.stringify(devedores));
+    }
+
+    function formatarDataBrasileira(iso) {
+      const [ano, mes, dia] = iso.split("-");
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function login() {
+      const s = document.getElementById("senha").value;
+      if (s === senha) {
+        document.getElementById("login-area").style.display = "none";
+        document.getElementById("main").style.display = "block";
+        render();
+      } else {
+        alert("Senha incorreta.");
+      }
+    }
+
+    function adicionarDevedor() {
+      const nome = document.getElementById("nome").value;
+      const whatsapp = document.getElementById("whatsapp").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const juros = parseFloat(document.getElementById("juros").value);
+      const vencimento = document.getElementById("vencimento").value;
+
+      if (!nome || !whatsapp || !valor || !juros || !vencimento) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      const devedorExistente = devedores.find(d => d.nome === nome);
+      const novaDivida = { valor, juros, vencimento, pago: false };
+
+      if (devedorExistente) {
+        devedorExistente.dividas.push(novaDivida);
+      } else {
+        devedores.push({ nome, whatsapp, dividas: [novaDivida] });
+      }
+
+      salvar();
+      render();
+    }
+
+    function calcularTotal(divida) {
+      const venc = new Date(divida.vencimento);
+      const hoje = new Date();
+      const vencido = hoje > venc;
+      if (!vencido) return divida.valor;
+      const mesesAtraso = Math.max(1, (hoje.getMonth() - venc.getMonth()) + 12 * (hoje.getFullYear() - venc.getFullYear()));
+      return divida.valor * (1 + (divida.juros / 100) * mesesAtraso);
+    }
+
+    function marcarPago(nome, index) {
+      const d = devedores.find(dev => dev.nome === nome);
+      if (d) {
+        d.dividas[index].pago = true;
+        salvar();
+        render();
+      }
+    }
+
+    function cobrar(nome, index) {
+      const d = devedores.find(dev => dev.nome === nome);
+      if (!d) return;
+      const tel = d.whatsapp.replace(/\D/g, "");
+      const divida = d.dividas[index];
+      const valor = calcularTotal(divida).toFixed(2);
+      const msg = `Olá ${d.nome}, passando para lembrar da dívida de R$${valor}. Favor acertar.`;
+      window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+
+    function render() {
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+
+      devedores.forEach(d => {
+        const box = document.createElement("div");
+        box.className = "devedor";
+        box.innerHTML = `<strong>${d.nome}</strong> (${d.whatsapp})<br><br>` +
+          d.dividas.map((divida, i) => `
+            R$ ${divida.valor} → Total: R$ ${calcularTotal(divida).toFixed(2)}<br>
+            Vence: ${formatarDataBrasileira(divida.vencimento)}<br>
+            Juros: ${divida.juros}%/mês<br>
+            ${divida.pago ? "<span style='color:green;'>✔ Pago</span><br>" : ""}
+            <button onclick="cobrar('${d.nome}', ${i})">Cobrar no Zap</button>
+            ${!divida.pago ? `<button onclick="marcarPago('${d.nome}', ${i})">Marcar Pago</button>` : ""}
+            <hr>
+          `).join("");
+        lista.appendChild(box);
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
