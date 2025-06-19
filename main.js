@@ -143,6 +143,7 @@ function renderListaDevedores(dividas) {
         <div class="mt-2 flex gap-2">
           ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : ''}
           <button onclick="editarDivida(${d.id})" class="bg-yellow-500 text-black px-3 py-1 rounded">Editar</button>
+          <button onclick="excluirDivida(${d.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
           <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%A1%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
         </div>
       </div>
@@ -269,6 +270,14 @@ function pagar(id) {
   const atualizadas = dividas.map(d => d.id === id ? { ...d, pago: true } : d);
   localStorage.setItem("dividas", JSON.stringify(atualizadas));
   showToast("Dívida marcada como paga!", "success");
+  renderDevedores();
+}
+
+function excluirDivida(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const atualizadas = dividas.filter(d => d.id !== id);
+  localStorage.setItem("dividas", JSON.stringify(atualizadas));
+  showToast("Dívida excluída com sucesso!", "success");
   renderDevedores();
 }
 
