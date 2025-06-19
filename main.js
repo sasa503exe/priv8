@@ -31,17 +31,17 @@ function renderLogin() {
   document.getElementById("entrar").onclick = () => {
     const email = document.getElementById("email").value.trim();
     const senha = document.getElementById("senha").value;
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      showToast("Email inválido!");
+    if (!email || !senha) {
+      showToast("Preencha email e senha!");
       return;
     }
-    if (email === "sasacomfominha4@gmail.com" && senha === "123456") {
+    if (email === "agiota@local" && senha === "123456") {
       localStorage.setItem("auth", "true");
       renderDashboard();
     } else {
       showToast("Credenciais inválidas!");
-ritte      }
-    };
+    }
+  };
 }
 
 function renderDashboard() {
@@ -55,7 +55,7 @@ function renderDashboard() {
       </div>
       <div class="bg-white p-4 rounded shadow mb-4">
         <h2 class="font-semibold mb-2">Nova Dívida</h2>
-        <input placeholder="Nome ou email do devedor" id="nome" class="border p-2 w-full mb-2">
+        <input placeholder="Nome do devedor" id="nome" class="border p-2 w-full mb-2">
         <input placeholder="Valor emprestado" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
         <input placeholder="Juros mensal (%)" id="juros" type="number" step="0.1" class="border p-2 w-full mb-2">
         <input placeholder="Data do empréstimo" id="data" type="date" class="border p-2 w-full mb-2">
@@ -78,8 +78,8 @@ function renderDashboard() {
     const data = document.getElementById("data").value;
     const vencimento = document.getElementById("vencimento").value;
 
-    if (!nome || !/^\S+@\S+\.\S+$/.test(nome)) {
-      showToast("Insira um email válido para o devedor!");
+    if (!nome) {
+      showToast("Insira o nome do devedor!");
       return;
     }
     if (isNaN(valor) || valor <= 0) {
