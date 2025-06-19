@@ -35,7 +35,7 @@ function renderLogin() {
       showToast("Email inválido!");
       return;
     }
-    if (email === "agiota@local" && senha === "123456") {
+    if (email === "sasacomfominha4@gmail.com" && senha === "123456") {
       localStorage.setItem("auth", "true");
       renderDashboard();
     } else {
