@@ -1,0 +1,16 @@
+
+{
+  "name": "Agiota Control PRO",
+  "short_name": "AgiotaPRO",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fef5c3",
+  "description": "Controle de dívidas com juros mensais.",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agiota Control PRO</title>
+  <link rel="manifest" href="/manifest.json" />
+  <script type="module" src="/main.js" defer></script>
+  <style>
+    body { font-family: sans-serif; background-color: #fef5c3; color: #111; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button { margin: 0.5rem 0; display: block; width: 100%; padding: 0.5rem; }
+    .divida-item { margin-bottom: 1.5rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Agiota Control PRO</h1>
+  <div id="login-area">
+    <input id="senha" type="password" placeholder="Digite a senha" />
+    <button onclick="login()">Entrar</button>
+  </div>
+  <div id="main" style="display:none;">
+    <h2>Nova Dívida</h2>
+    <input id="nome" placeholder="Nome do devedor">
+    <input id="valor" placeholder="Valor (R$)" type="number">
+    <input id="data" placeholder="Data de vencimento" type="date">
+    <input id="whatsapp" placeholder="WhatsApp (ex: 51999999999)">
+    <button onclick="adicionarDivida()">Cadastrar</button>
+    <hr>
+    <div id="app"></div>
+  </div>
+</body>
+</html>
