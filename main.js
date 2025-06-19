@@ -72,7 +72,7 @@ function renderDefinirSaldo() {
 }
 
 function renderMenu() {
-  const saldo = localStorage.getItem("saldoCapital") || 0;
+  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
       <div class="bg-white p-6 rounded shadow w-80">
@@ -272,8 +272,8 @@ function pagar(id) {
   renderDevedores();
 }
 
-if (localStorage.getItem("auth") === "true") {
-  renderMenu();
-} else {
+if (!localStorage.getItem("auth")) {
   renderLogin();
+} else {
+  renderMenu();
 }
