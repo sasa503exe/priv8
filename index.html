@@ -2,13 +2,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agiota Control PRO v3.1.2</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agiota Control PRO v3.1.3</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/imask"></script>
 </head>
-<body class="bg-yellow-100 min-h-screen text-gray-800">
+<body class="bg-yellow-100 min-h-screen text-gray-900">
   <div class="max-w-xl mx-auto p-4">
     <h1 class="text-3xl font-bold text-center text-red-600 mb-4">Agiota Control PRO</h1>
 
@@ -105,6 +105,8 @@
         dados.push(dev);
       }
 
+      if (!dev.dividas) dev.dividas = [];
+
       const editIndex = document.getElementById("edit_index").value;
       const nova = { valor, juros, vencimento: venc, pago: false };
 
@@ -131,11 +133,8 @@
         const card = document.createElement("div");
         card.className = "bg-white p-4 rounded shadow";
 
-        const total = d.dividas.reduce((acc, dv) => acc + parseFloat(dv.valor), 0).toFixed(2);
-
         let html = `<div class="flex justify-between"><strong>${d.nome}</strong> <button onclick="excluirDevedor(${i})" class="text-red-600">Excluir</button></div>
-        <div>Zap: ${d.zap}</div>
-        <div class="mb-2">Total devido: R$ ${total}</div>`;
+        <div>Zap: ${d.zap}</div>`;
 
         d.dividas.forEach((dv, j) => {
           html += `
@@ -180,7 +179,6 @@
       }
     }
 
-    // Aplica máscara de data
     IMask(document.getElementById("vencimento"), { mask: "00/00/0000" });
   </script>
 </body>
