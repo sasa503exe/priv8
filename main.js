@@ -193,20 +193,45 @@ function renderDevedores() {
   app.innerHTML = `
     <div class="p-4 max-w-4xl mx-auto">
       <h1 class="text-2xl font-bold text-red-700 mb-4">📋 Lista de Devedores</h1>
+      <div class="mb-4">
+        <input id="busca" placeholder="Pesquisar por nome ou número" class="border p-2 w-full mb-2">
+        <label class="flex items-center">
+          <input type="checkbox" id="filtroNaoPagos" class="mr-2">
+          Mostrar só não pagos
+        </label>
+      </div>
       <div class="text-right mb-4 text-sm">Saldo Atual: ${formatarMoeda(saldoAtual)}</div>
       <div id="lista"></div>
       <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
     </div>
   `;
 
-  renderListaDevedores(dividas);
+  const buscaInput = document.getElementById("busca");
+  const filtroNaoPagos = document.getElementById("filtroNaoPagos");
+
+  function atualizarLista() {
+    const termoBusca = buscaInput.value.toLowerCase();
+    const filtrarNaoPagos = filtroNaoPagos.checked;
+    const dividasFiltradas = dividas.filter(d => {
+      const bateNome = d.nome.toLowerCase().includes(termoBusca);
+      const bateNumero = d.numero ? d.numero.includes(termoBusca) : false;
+      const naoPago = !d.pago;
+      return (bateNome || bateNumero) && (!filtrarNaoPagos || naoPago);
+    });
+    renderListaDevedores(dividasFiltradas);
+  }
+
+  buscaInput.oninput = atualizarLista;
+  filtroNaoPagos.onchange = atualizarLista;
+
+  renderListaDevedores(dividas); // Inicializa com todas as dívidas
   document.getElementById("voltarMenu").onclick = () => renderMenu();
 }
 
 function renderListaDevedores(dividas) {
   const container = document.getElementById("lista");
   if (!dividas.length) {
-    container.innerHTML = "<p class='text-gray-500'>Nenhum devedor cadastrado.</p>";
+    container.innerHTML = "<p class='text-gray-500'>Nenhum devedor encontrado.</p>";
     return;
   }
 
