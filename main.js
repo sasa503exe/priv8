@@ -80,7 +80,7 @@ function renderDefinirSaldo() {
 }
 
 function renderAlterarSaldo() {
-  const saldoAtual = parseFloat(localStorage.getItem "saldoCapital") || 0);
+  const saldoAtual = parseFloat(localStorage.getItem("saldoCapital")) || 0;
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
       <div class="bg-white p-6 rounded shadow w-80">
@@ -173,11 +173,11 @@ function renderMenu() {
 function renderDevedores() {
   const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
   const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
-  const hoje = new Date("2025-06-19T18:39:00-03:00"); // Data atual ajustada
+  const hoje = new Date(); // Data atual dinâmica
   const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
     const venc = new Date(d.vencimento);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
-    const taxaDiaria = d.juros / 100 / 30; // Juros mensal pra diária
+    const taxaDiaria = d.juros / 100 / 30;
     const valorJuros = d.valor * taxaDiaria * diasAtraso;
     return sum + (d.valor + valorJuros);
   }, 0);
@@ -203,22 +203,21 @@ function renderListaDevedores(dividas) {
     return;
   }
 
-  const hoje = new Date("2025-06-19T18:39:00-03:00"); // Data atual ajustada
+  const hoje = new Date(); // Data atual dinâmica
   container.innerHTML = dividas.map(d => {
-    const dataEmprestimo = validarData(d.data); // Data do empréstimo
-    const venc = new Date(d.vencimento); // Data de vencimento
+    const dataEmprestimo = validarData(d.data);
+    const venc = new Date(d.vencimento);
     dataEmprestimo.setHours(0, 0, 0, 0);
     venc.setHours(0, 0, 0, 0);
-    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24))); // Dias após vencimento
-    const diasEmprestimo = Math.max(1, Math.floor((venc - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Dias do empréstimo
+    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
+    const diasEmprestimo = Math.max(1, Math.floor((venc - dataEmprestimo) / (1000 * 60 * 60 * 24)));
     const vencido = hoje > venc;
 
-    // Calcular juros para o período do empréstimo
-    const taxaDiaria = d.juros / 100 / 30; // Juros mensal dividido por 30 dias
-    const valorJurosEmprestimo = d.valor * taxaDiaria * diasEmprestimo; // Juros até o vencimento
-    const valorJurosAtraso = d.valor * taxaDiaria * diasAtraso; // Juros por atraso
-    const valorJuros = vencido ? valorJurosEmprestimo + valorJurosAtraso : valorJurosEmprestimo; // Total de juros
-    const valorFinal = d.valor + valorJuros; // Total a pagar
+    const taxaDiaria = d.juros / 100 / 30;
+    const valorJurosEmprestimo = d.valor * taxaDiaria * diasEmprestimo;
+    const valorJurosAtraso = d.valor * taxaDiaria * diasAtraso;
+    const valorJuros = vencido ? valorJurosEmprestimo + valorJurosAtraso : valorJurosEmprestimo;
+    const valorFinal = d.valor + valorJuros;
 
     return `
       <div class="bg-white p-4 rounded shadow mb-2">
@@ -233,7 +232,7 @@ function renderListaDevedores(dividas) {
           ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : `<button onclick="desmarcarPago(${d.id})" class="bg-orange-600 text-white px-3 py-1 rounded">Marcar não pago</button>`}
           <button onclick="editarDivida(${d.id})" class="bg-yellow-500 text-black px-3 py-1 rounded">Editar</button>
           <button onclick="excluirDivida(${d.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
-          <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%AA%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
+          <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%A9%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
         </div>
       </div>
     `;
