@@ -138,11 +138,14 @@ function renderListaDevedores(dividas) {
   container.innerHTML = dividas.map(d => {
     const dataEmprestimo = validarData(d.data); // Data do empréstimo
     const venc = new Date(d.vencimento); // Data de vencimento
+    // Ajustar para garantir cálculo preciso de dias
+    dataEmprestimo.setHours(0, 0, 0, 0); // Zerar horas para evitar erros de fuso
+    venc.setHours(0, 0, 0, 0);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24))); // Dias após vencimento
     const diasEmprestimo = Math.max(1, Math.floor((venc - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Dias do empréstimo
     const vencido = hoje > venc;
 
-    // Calcular juros para o período do empréstimo (ex.: 30% para 30 dias)
+    // Calcular juros para o período do empréstimo
     const taxaDiaria = d.juros / 100 / 30; // Juros mensal dividido por 30 dias
     const valorJurosEmprestimo = d.valor * taxaDiaria * diasEmprestimo; // Juros até o vencimento
     const valorJurosAtraso = d.valor * taxaDiaria * diasAtraso; // Juros por atraso
