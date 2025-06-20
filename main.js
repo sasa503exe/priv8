@@ -79,22 +79,91 @@ function renderDefinirSaldo() {
   };
 }
 
-function renderMenu() {
-  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+function renderAlterarSaldo() {
+  const saldoAtual = parseFloat(localStorage.getItem "saldoCapital") || 0);
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
       <div class="bg-white p-6 rounded shadow w-80">
-        <h1 class="text-xl font-bold mb-4 text-red-700">Agiota Control PRO</h1>
-        <div class="text-right mb-4 text-sm">Saldo: ${formatarMoeda(saldo)}</div>
-        <button id="verDevedores" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
-        <button id="gerarDivida" class="bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
-        <button id="sair" class="bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
+        <h1 class="text-xl font-bold mb-4 text-red-700">Alterar Saldo Capital</h1>
+        <input type="number" id="saldo" value="${saldoAtual}" placeholder="Saldo Capital (R$)" step="0.01" class="border p-2 w-full mb-4">
+        <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+        <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded w-full mt-2">Voltar ao Menu</button>
       </div>
     </div>
   `;
 
-  document.getElementById("verDevedores").onclick = () => renderDevedores();
-  document.getElementById("gerarDivida").onclick = () => renderGerarDivida();
+  document.getElementById("salvarSaldo").onclick = () => {
+    const saldo = parseFloat(document.getElementById("saldo").value);
+    if (isNaN(saldo) || saldo < 0) {
+      showToast("Saldo deve ser um valor positivo!");
+      return;
+    }
+    localStorage.setItem("saldoCapital", saldo);
+    showToast("Saldo atualizado com sucesso!", "success");
+    renderMenu();
+  };
+
+  document.getElementById("voltarMenu").onclick = () => renderMenu();
+}
+
+function renderMenu() {
+  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+  app.innerHTML = `
+    <div class="flex flex-col h-screen bg-yellow-100">
+      <div class="bg-white p-4 shadow flex justify-between items-center">
+        <h1 class="text-xl font-bold text-red-700">Agiota Control PRO</h1>
+        <button id="menuToggle" class="text-2xl">📋</button>
+      </div>
+      <div id="menu" class="hidden bg-white shadow w-64 fixed top-0 left-0 h-full p-4 z-50">
+        <button id="fecharMenu" class="text-xl mb-4">✖</button>
+        <div class="text-sm mb-4">Saldo: ${formatarMoeda(saldo)}</div>
+        <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
+        <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
+        <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-2 rounded w-full mb-2">Alterar Saldo</button>
+        <button id="sair" class="block bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
+      </div>
+      <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+    </div>
+  `;
+
+  const menuToggle = document.getElementById("menuToggle");
+  const menu = document.getElementById("menu");
+  const fecharMenu = document.getElementById("fecharMenu");
+  const overlay = document.getElementById("overlay");
+
+  menuToggle.onclick = () => {
+    menu.classList.toggle("hidden");
+    overlay.classList.toggle("hidden");
+  };
+
+  fecharMenu.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  document.getElementById("verDevedores").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderDevedores();
+  };
+
+  document.getElementById("gerarDivida").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderGerarDivida();
+  };
+
+  document.getElementById("alterarSaldo").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderAlterarSaldo();
+  };
+
   document.getElementById("sair").onclick = () => {
     localStorage.removeItem("auth");
     renderLogin();
@@ -138,8 +207,7 @@ function renderListaDevedores(dividas) {
   container.innerHTML = dividas.map(d => {
     const dataEmprestimo = validarData(d.data); // Data do empréstimo
     const venc = new Date(d.vencimento); // Data de vencimento
-    // Ajustar para garantir cálculo preciso de dias
-    dataEmprestimo.setHours(0, 0, 0, 0); // Zerar horas para evitar erros de fuso
+    dataEmprestimo.setHours(0, 0, 0, 0);
     venc.setHours(0, 0, 0, 0);
     const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24))); // Dias após vencimento
     const diasEmprestimo = Math.max(1, Math.floor((venc - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Dias do empréstimo
@@ -161,8 +229,8 @@ function renderListaDevedores(dividas) {
         <div class="text-sm">Juros: ${formatarMoeda(valorJuros)}</div>
         <div class="text-sm">Total ${vencido ? `(atraso ${diasAtraso} dias)` : ''}: ${formatarMoeda(valorFinal)}</div>
         ${vencido && !d.pago ? `<div class="text-sm text-red-600">Atraso: ${diasAtraso} dias</div>` : ''}
-        <div class="mt-2 flex gap-2">
-          ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : ''}
+        <div class="mt-2 flex gap-2 flex-wrap">
+          ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : `<button onclick="desmarcarPago(${d.id})" class="bg-orange-600 text-white px-3 py-1 rounded">Marcar não pago</button>`}
           <button onclick="editarDivida(${d.id})" class="bg-yellow-500 text-black px-3 py-1 rounded">Editar</button>
           <button onclick="excluirDivida(${d.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
           <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%AA%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
@@ -323,6 +391,14 @@ function pagar(id) {
   const atualizadas = dividas.map(d => d.id === id ? { ...d, pago: true } : d);
   localStorage.setItem("dividas", JSON.stringify(atualizadas));
   showToast("Dívida marcada como paga!", "success");
+  renderDevedores();
+}
+
+function desmarcarPago(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const atualizadas = dividas.map(d => d.id === id ? { ...d, pago: false } : d);
+  localStorage.setItem("dividas", JSON.stringify(atualizadas));
+  showToast("Dívida marcada como não paga!", "success");
   renderDevedores();
 }
 
