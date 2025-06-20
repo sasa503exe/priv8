@@ -18,6 +18,7 @@ function showToast(message, type = "error") {
 
 function formatarData(data) {
   if (!data) return "Data inválida";
+  // Assume que a data está no formato YYYY-MM-DD (ISO)
   const [year, month, day] = data.split("-");
   return `${day}/${month}/${year}`;
 }
@@ -61,10 +62,10 @@ function validarData(dataStr) {
 function renderLogin() {
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100 p-4">
-      <div class="bg-white p-6 rounded shadow-md w-full max-w-sm text-center">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm text-center">
         <h1 class="text-2xl font-bold mb-6 text-red-700">Agiota Control PRO</h1>
-        <input type="text" id="email" placeholder="Email" class="border border-gray-300 p-3 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
-        <input type="password" id="senha" placeholder="Senha" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+        <input type="text" id="email" placeholder="Email" class="border border-gray-300 p-3 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
+        <input type="password" id="senha" placeholder="Senha" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm">
         <button id="entrar" class="bg-red-600 text-white px-4 py-3 rounded-md w-full text-lg font-semibold hover:bg-red-700 transition duration-200">Entrar</button>
       </div>
     </div>
@@ -94,10 +95,10 @@ function renderLogin() {
 function renderDefinirSaldo() {
     app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100 p-4">
-      <div class="bg-white p-6 rounded shadow-md w-full max-w-sm text-center">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm text-center">
         <h1 class="text-2xl font-bold mb-6 text-red-700">Definir Saldo Inicial</h1>
-        <p class="text-gray-600 mb-4">Informe o seu saldo de capital inicial para começar.</p>
-        <input type="number" id="saldo" placeholder="Saldo Capital (R$)" step="0.01" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+        <p class="text-gray-600 mb-4 text-sm">Informe o seu saldo de capital inicial para começar.</p>
+        <input type="number" id="saldo" placeholder="Saldo Capital (R$)" step="0.01" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
         <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-3 rounded-md w-full text-lg font-semibold hover:bg-green-700 transition duration-200">Salvar Saldo</button>
       </div>
     </div>
@@ -120,10 +121,10 @@ function renderAlterarSaldo() {
   const saldoAtual = parseFloat(localStorage.getItem("saldoCapital") || 0);
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100 p-4">
-      <div class="bg-white p-6 rounded shadow-md w-full max-w-sm text-center">
+      <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-sm text-center">
         <h1 class="text-2xl font-bold mb-6 text-red-700">Alterar Saldo Capital</h1>
-         <p class="text-gray-600 mb-4">Seu saldo atual é: <strong>${formatarMoeda(saldoAtual)}</strong></p>
-        <input type="number" id="saldo" value="${saldoAtual}" placeholder="Novo Saldo Capital (R$)" step="0.01" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+         <p class="text-gray-600 mb-4 text-sm">Seu saldo atual é: <strong>${formatarMoeda(saldoAtual)}</strong></p>
+        <input type="number" id="saldo" value="${saldoAtual}" placeholder="Novo Saldo Capital (R$)" step="0.01" class="border border-gray-300 p-3 w-full mb-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
         <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-3 rounded-md w-full text-lg font-semibold hover:bg-green-700 transition duration-200 mb-3">Salvar Novo Saldo</button>
          <button id="voltarMenu" class="bg-gray-300 text-gray-800 px-4 py-3 rounded-md w-full text-lg font-semibold hover:bg-gray-400 transition duration-200">Voltar ao Menu</button>
       </div>
@@ -168,17 +169,17 @@ function renderMenu() {
         </div>
         <div class="p-4">
             <div class="text-sm mb-4 text-gray-700">Saldo Atual: <span class="font-semibold">${formatarMoeda(saldo)}</span></div>
-            <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left hover:bg-blue-700 transition duration-200">Ver Devedores</button>
-            <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left hover:bg-green-700 transition duration-200">Gerar Nova Dívida</button>
-            <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-3 rounded-md w-full mb-3 text-left hover:bg-yellow-600 transition duration-200">Alterar Saldo</button>
-            <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left hover:bg-purple-700 transition duration-200">Configurar Juros</button>
-            <button id="sair" class="block bg-gray-300 text-gray-800 px-4 py-3 rounded-md w-full text-left hover:bg-gray-400 transition duration-200">Sair</button>
+            <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left text-sm font-semibold hover:bg-blue-700 transition duration-200">Ver Devedores</button>
+            <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left text-sm font-semibold hover:bg-green-700 transition duration-200">Gerar Nova Dívida</button>
+            <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-3 rounded-md w-full mb-3 text-left text-sm font-semibold hover:bg-yellow-600 transition duration-200">Alterar Saldo</button>
+            <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-3 rounded-md w-full mb-3 text-left text-sm font-semibold hover:bg-purple-700 transition duration-200">Configurar Juros</button>
+            <button id="sair" class="block bg-gray-300 text-gray-800 px-4 py-3 rounded-md w-full text-left text-sm font-semibold hover:bg-gray-400 transition duration-200">Sair</button>
         </div>
       </div>
       <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
 
-      <main class="flex-1 overflow-y-auto p-4">
-        <div class="text-center text-gray-600 mt-8">Selecione uma opção no menu.</div>
+      <main class="flex-1 overflow-y-auto p-4 flex items-center justify-center">
+        <div class="text-center text-gray-600 text-lg">Selecione uma opção no menu lateral.</div>
       </main>
     </div>
   `;
@@ -240,24 +241,28 @@ function renderDevedores() {
   const hoje = new Date();
   hoje.setHours(0,0,0,0); // Zera as horas para comparação de datas
 
+  // Recalcula o total devido com base nos juros acumulados até hoje para dívidas não pagas
   const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
-    const venc = new Date(d.vencimento + 'T00:00:00'); // Garante fuso horário neutro
-    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
+    const dataEmprestimo = validarData(d.data);
+     if (!dataEmprestimo) return sum; // Ignora dívidas com data inválida
+    dataEmprestimo.setHours(0,0,0,0);
+
+    const diasCorridos = Math.max(1, Math.ceil((hoje - dataEmprestimo) / (1000 * 60 * 60 * 24)));
     const taxaDiaria = (d.juros / 100) / 30;
-    const valorJuros = d.valor * taxaDiaria * diasAtraso;
+    const valorJuros = d.valor * taxaDiaria * diasCorridos;
     return sum + (d.valor + valorJuros);
   }, 0);
   const saldoAtual = saldo + totalDevido;
 
   // Dashboard Calculations
   const lucroAcumulado = dividas.reduce((sum, d) => {
-     if (d.pago) {
+     if (d.pago && d.dataPagamento) { // Calcula lucro apenas para dívidas pagas com data de pagamento
       const dataEmprestimo = validarData(d.data);
       if (!dataEmprestimo) return sum; // Ignora dívidas com data inválida
       dataEmprestimo.setHours(0,0,0,0);
       const dataPagamento = new Date(d.dataPagamento + 'T00:00:00'); // Assume que você adicionaria dataPagamento ao objeto divida quando pago
        dataPagamento.setHours(0,0,0,0);
-      const diasEmprestimo = Math.max(1, Math.ceil((dataPagamento - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Usa ceil para contar o dia inicial
+      const diasEmprestimo = Math.max(0, Math.ceil((dataPagamento - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Usa ceil para contar o dia inicial
       const taxaDiaria = (d.juros / 100) / 30;
       const jurosTotais = d.valor * taxaDiaria * diasEmprestimo;
       return sum + jurosTotais;
@@ -269,13 +274,15 @@ function renderDevedores() {
   const valorHoje = dividas.filter(d => {
     if (d.pago) return false;
     const venc = new Date(d.vencimento + 'T00:00:00');
+    venc.setHours(0,0,0,0);
     return venc.toDateString() === hoje.toDateString();
-  }).reduce((sum, d) => sum + d.valor, 0);
+  }).reduce((sum, d) => d.valor + (d.valor * ((d.juros/100)/30) * Math.max(0, Math.ceil((hoje - validarData(d.data).setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)))) , 0); // Calcula o valor total (inicial + juros até hoje) para as que vencem hoje
 
 
   const inadimplentes = dividas.filter(d => {
     if (d.pago) return false;
     const venc = new Date(d.vencimento + 'T00:00:00');
+     venc.setHours(0,0,0,0);
     return hoje > venc;
   }).length;
   const totalDevedores = dividas.length;
@@ -295,8 +302,8 @@ function renderDevedores() {
       </div>
 
       <div class="bg-white p-4 rounded-lg shadow-md mb-6">
-        <input id="busca" placeholder="Pesquisar por nome ou número" class="border border-gray-300 p-3 w-full mb-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-        <label class="flex items-center text-gray-700 text-sm">
+        <input id="busca" placeholder="Pesquisar por nome ou número" class="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <label class="flex items-center text-gray-700 text-sm mt-3">
           <input type="checkbox" id="filtroNaoPagos" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
           Mostrar somente dívidas não pagas
         </label>
@@ -305,7 +312,8 @@ function renderDevedores() {
       <div id="lista" class="space-y-4"></div>
 
       <div class="mt-6 flex flex-wrap gap-3 justify-center">
-        <button id="exportarDados" class="bg-blue-600 text-white px-4 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 transition duration-200 flex-1 sm:flex-none">Exportar Dados</button>
+        <button id="exportarDadosJson" class="bg-blue-600 text-white px-4 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 transition duration-200 flex-1 sm:flex-none">Exportar JSON</button>
+        <button id="exportarDadosCsv" class="bg-blue-600 text-white px-4 py-3 rounded-md text-sm font-semibold hover:bg-blue-700 transition duration-200 flex-1 sm:flex-none">Exportar CSV</button>
         <button id="importarDados" class="bg-green-600 text-white px-4 py-3 rounded-md text-sm font-semibold hover:bg-green-700 transition duration-200 flex-1 sm:flex-none">Importar Dados</button>
       </div>
        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importarDados(event)">
@@ -330,7 +338,8 @@ function renderDevedores() {
   buscaInput.oninput = atualizarLista;
   filtroNaoPagos.onchange = atualizarLista;
 
-  document.getElementById("exportarDados").onclick = exportarDados;
+  document.getElementById("exportarDadosJson").onclick = () => exportarDados('json');
+   document.getElementById("exportarDadosCsv").onclick = () => exportarDados('csv');
   document.getElementById("importarDados").onclick = () => document.getElementById("importFile").click();
   document.getElementById("voltarMenu").onclick = () => renderMenu();
 
@@ -382,7 +391,7 @@ function renderListaDevedores(dividas) {
 
 
     const taxaDiaria = (d.juros / 100) / 30;
-    const diasCorridos = Math.max(1, Math.ceil((hoje - dataEmprestimo) / (1000 * 60 * 60 * 24)));
+    const diasCorridos = Math.max(0, Math.ceil((hoje - dataEmprestimo) / (1000 * 60 * 60 * 24)));
     const valorJurosTotal = d.valor * taxaDiaria * diasCorridos;
     const valorTotalComJurosHoje = d.valor + valorJurosTotal;
 
@@ -417,7 +426,7 @@ function renderListaDevedores(dividas) {
         }
 
         <div class="mt-3 flex flex-wrap gap-2">
-          ${!d.pago ? `<button onclick="promptPagamentoParcial(${d.id}, ${d.valor})" class="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700 transition duration-200">Pgto. Parcial</button>` : ''}
+          ${!d.pago ? `<button onclick="promptPagamentoParcial(${d.id})" class="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700 transition duration-200">Pgto. Parcial</button>` : ''}
           ${!d.pago ? `<button onclick="confirmarPagamento(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition duration-200">Marcar Pago</button>` : `<button onclick="desmarcarPago(${d.id})" class="bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition duration-200">Marcar Não Pago</button>`}
           <button onclick="editarDivida(${d.id})" class="bg-yellow-500 text-black px-3 py-1 rounded text-xs hover:bg-yellow-600 transition duration-200">Editar</button>
           <button onclick="confirmarExclusao(${d.id})" class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition duration-200">Excluir</button>
@@ -429,15 +438,11 @@ function renderListaDevedores(dividas) {
   }).join("");
 }
 
-
-function promptPagamentoParcial(id, valorDivida) {
+function promptPagamentoParcial(id) {
     const valorPagoStr = prompt(`Registrar pagamento parcial para ID ${id}.\nValor pago (R$):`);
     if (valorPagoStr !== null) {
         const valorPago = parseFloat(valorPagoStr);
         if (!isNaN(valorPago) && valorPago > 0) {
-             // Simplesmente registra o pagamento parcial. A lógica de abater no valor inicial
-             // e recalcular juros ficaria mais complexa e ideal para o backend.
-             // Por enquanto, apenas adiciona ao histórico para registro.
              adicionarHistorico(id, valorPago);
              showToast("Pagamento parcial registrado no histórico!", "success");
              renderDevedores(); // Renderiza a lista novamente para mostrar o histórico
@@ -498,16 +503,4 @@ function renderGerarDivida() {
         </div>
          <div>
             <label for="juros" class="block text-sm font-medium text-gray-700 mb-1">Juros Mensal (%)</label>
-            <input type="number" id="juros" value="${taxaPadrao}" min="10" max="50" step="1" class="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-        </div>
-        <div>
-            <label for="data" class="block text-sm font-medium text-gray-700 mb-1">Data do Empréstimo</label>
-            <input type="text" id="data" value="${dataAtualFormatada}" placeholder="dd/mm/aaaa" pattern="\\d{2}/\\d{2}/\\d{4}" class="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-        </div>
-         <div>
-            <label for="localizacao" class="block text-sm font-medium text-gray-700 mb-1">Localização / Referência</label>
-            <input type="text" id="localizacao" placeholder="Ex: Bairro X, perto da padaria" class="border border-gray-300 p-3 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-        </div>
-
-        <div>
-            <label for="prazo" class="block text-sm font-medium text-gray-700 mb-1">Prazo para Pagamento</label
+            <input type="number" id="juros" value="${taxaPadrao}" min="10" max="50" step="1" class="border border-gray
