@@ -24,7 +24,158 @@ function validarData(dataStr) {
   return new Date(ano, mes - 1, dia);
 }
 
-// Funções existentes (renderLogin, renderDefinirSaldo, etc.) permanecem iguais até renderDevedores
+function renderLogin() {
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Agiota Control PRO</h1>
+        <input type="text" id="email" placeholder="Email" class="border p-2 w-full mb-2">
+        <input type="password" id="senha" placeholder="Senha" class="border p-2 w-full mb-4">
+        <button id="entrar" class="bg-red-600 text-white px-4 py-2 rounded w-full">Entrar</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("entrar").onclick = () => {
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    if (!email || !senha) {
+      showToast("Preencha email e senha!");
+      return;
+    }
+    if (email === "agiota@local" && senha === "123456") {
+      if (!localStorage.getItem("saldoCapital")) {
+        renderDefinirSaldo();
+      } else {
+        localStorage.setItem("auth", "true");
+        renderMenu();
+      }
+    } else {
+      showToast("Credenciais inválidas!");
+    }
+  };
+}
+
+function renderDefinirSaldo() {
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Definir Saldo Inicial</h1>
+        <input type="number" id="saldo" placeholder="Saldo Capital (R$)" step="0.01" class="border p-2 w-full mb-4">
+        <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("salvarSaldo").onclick = () => {
+    const saldo = parseFloat(document.getElementById("saldo").value);
+    if (isNaN(saldo) || saldo < 0) {
+      showToast("Saldo deve ser um valor positivo!");
+      return;
+    }
+    localStorage.setItem("saldoCapital", saldo);
+    localStorage.setItem("auth", "true");
+    renderMenu();
+  };
+}
+
+function renderAlterarSaldo() {
+  const saldoAtual = parseFloat(localStorage.getItem("saldoCapital") || 0);
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Alterar Saldo Capital</h1>
+        <input type="number" id="saldo" value="${saldoAtual}" placeholder="Saldo Capital (R$)" step="0.01" class="border p-2 w-full mb-4">
+        <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+        <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded w-full mt-2">Voltar ao Menu</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("salvarSaldo").onclick = () => {
+    const saldo = parseFloat(document.getElementById("saldo").value);
+    if (isNaN(saldo) || saldo < 0) {
+      showToast("Saldo deve ser um valor positivo!");
+      return;
+    }
+    localStorage.setItem("saldoCapital", saldo);
+    showToast("Saldo atualizado com sucesso!", "success");
+    renderMenu();
+  };
+
+  document.getElementById("voltarMenu").onclick = () => renderMenu();
+}
+
+function renderMenu() {
+  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+  app.innerHTML = `
+    <div class="flex flex-col h-screen bg-yellow-100">
+      <div class="bg-white p-4 shadow flex justify-between items-center">
+        <h1 class="text-xl font-bold text-red-700">Agiota Control PRO</h1>
+        <button id="menuToggle" class="text-2xl">📋</button>
+      </div>
+      <div id="menu" class="hidden bg-white shadow w-64 fixed top-0 left-0 h-full p-4 z-50">
+        <button id="fecharMenu" class="text-xl mb-4">✖</button>
+        <div class="text-sm mb-4">Saldo: ${formatarMoeda(saldo)}</div>
+        <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
+        <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
+        <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-2 rounded w-full mb-2">Alterar Saldo</button>
+        <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-2 rounded w-full mb-2">Configurar Juros</button>
+        <button id="sair" class="block bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
+      </div>
+      <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+    </div>
+  `;
+
+  const menuToggle = document.getElementById("menuToggle");
+  const menu = document.getElementById("menu");
+  const fecharMenu = document.getElementById("fecharMenu");
+  const overlay = document.getElementById("overlay");
+
+  menuToggle.onclick = () => {
+    menu.classList.toggle("hidden");
+    overlay.classList.toggle("hidden");
+  };
+
+  fecharMenu.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  document.getElementById("verDevedores").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderDevedores();
+  };
+
+  document.getElementById("gerarDivida").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderGerarDivida();
+  };
+
+  document.getElementById("alterarSaldo").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderAlterarSaldo();
+  };
+
+  document.getElementById("configurarJuros").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderConfigurarJuros();
+  };
+
+  document.getElementById("sair").onclick = () => {
+    localStorage.removeItem("auth");
+    renderLogin();
+  };
+}
 
 function renderDevedores() {
   const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
@@ -182,7 +333,7 @@ function adicionarHistorico(id, valorPago) {
 }
 
 function renderGerarDivida() {
-  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao")) || 20;
+  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao") || 20);
   app.innerHTML = `
     <div class="p-4 max-w-4xl mx-auto">
       <h1 class="text-2xl font-bold text-red-700 mb-4">Nova Dívida</h1>
@@ -257,7 +408,7 @@ function renderGerarDivida() {
 }
 
 function renderConfigurarJuros() {
-  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao")) || 20;
+  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao") || 20);
   app.innerHTML = `
     <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
       <div class="bg-white p-6 rounded shadow w-80">
@@ -465,84 +616,12 @@ function gerarQRCodePIX(id) {
         <h2 class="text-lg font-bold mb-2">QR Code PIX</h2>
         <div class="text-center mb-2">Valor: ${formatarMoeda(valorTotal)}</div>
         <div class="text-center mb-2">Para: ${divida.nome}</div>
-        <div class="bg-gray-200 p-4 mb-2" style="width: 200px; height: 200px;">QR Code (Simulação)</div> <!-- Substituir por canvas real -->
+        <div class="bg-gray-200 p-4 mb-2" style="width: 200px; height: 200px;">QR Code (Simulação)</div>
         <button onclick="document.getElementById('qrModal').remove()" class="bg-red-600 text-white px-4 py-2 rounded w-full">Fechar</button>
       </div>
     </div>
   `);
   showToast("QR Code gerado (simulação)!", "success");
-  // Nota: Pra QR real, usa uma lib como qrcode.js e canvas
-}
-
-function renderMenu() {
-  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
-  app.innerHTML = `
-    <div class="flex flex-col h-screen bg-yellow-100">
-      <div class="bg-white p-4 shadow flex justify-between items-center">
-        <h1 class="text-xl font-bold text-red-700">Agiota Control PRO</h1>
-        <button id="menuToggle" class="text-2xl">📋</button>
-      </div>
-      <div id="menu" class="hidden bg-white shadow w-64 fixed top-0 left-0 h-full p-4 z-50">
-        <button id="fecharMenu" class="text-xl mb-4">✖</button>
-        <div class="text-sm mb-4">Saldo: ${formatarMoeda(saldo)}</div>
-        <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
-        <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
-        <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-2 rounded w-full mb-2">Alterar Saldo</button>
-        <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-2 rounded w-full mb-2">Configurar Juros</button>
-        <button id="sair" class="block bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
-      </div>
-      <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
-    </div>
-  `;
-
-  const menuToggle = document.getElementById("menuToggle");
-  const menu = document.getElementById("menu");
-  const fecharMenu = document.getElementById("fecharMenu");
-  const overlay = document.getElementById("overlay");
-
-  menuToggle.onclick = () => {
-    menu.classList.toggle("hidden");
-    overlay.classList.toggle("hidden");
-  };
-
-  fecharMenu.onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-  };
-
-  overlay.onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-  };
-
-  document.getElementById("verDevedores").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderDevedores();
-  };
-
-  document.getElementById("gerarDivida").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderGerarDivida();
-  };
-
-  document.getElementById("alterarSaldo").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderAlterarSaldo();
-  };
-
-  document.getElementById("configurarJuros").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderConfigurarJuros();
-  };
-
-  document.getElementById("sair").onclick = () => {
-    localStorage.removeItem("auth");
-    renderLogin();
-  };
 }
 
 if (!localStorage.getItem("auth")) {
