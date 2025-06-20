@@ -1,28 +1,206 @@
-// ... (código existente até renderDevedores)
+const app = document.getElementById("app");
+const toast = document.getElementById("toast");
 
-// Novas funções
-function registrarPagamentoParcial(id, valorPago) {
-  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
-  const divida = dividas.find(d => d.id === id);
-  if (divida && !divida.pago && valorPago > 0 && valorPago <= divida.valor) {
-    divida.valor -= valorPago;
-    adicionarHistorico(id, valorPago);
-    localStorage.setItem("dividas", JSON.stringify(dividas));
-    showToast("Pagamento parcial registrado!", "success");
-    renderDevedores();
-  } else {
-    showToast("Valor inválido ou dívida já paga!", "error");
-  }
+function showToast(message, type = "error") {
+  toast.textContent = message;
+  toast.className = `fixed top-4 right-4 p-4 rounded shadow text-white ${type === "error" ? "bg-red-600" : "bg-green-600"} z-50`;
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), 3000);
 }
 
-function adicionarHistorico(id, valorPago) {
-  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
-  const divida = dividas.find(d => d.id === id);
-  if (divida) {
-    divida.historicoPagamentos = divida.historicoPagamentos || [];
-    divida.historicoPagamentos.push({ data: new Date().toLocaleDateString('pt-BR'), valor: valorPago });
-    localStorage.setItem("dividas", JSON.stringify(dividas));
+function formatarData(data) {
+  return new Intl.DateTimeFormat("pt-BR").format(new Date(data));
+}
+
+function formatarMoeda(valor) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
+}
+
+function validarData(dataStr) {
+  const [dia, mes, ano] = dataStr.split('/').map(Number);
+  if (!dataStr.match(/^\d{2}\/\d{2}\/\d{4}$/) || dia < 1 || dia > 31 || mes < 1 || mes > 12 || ano < 2000 || ano > 2100) {
+    return null;
   }
+  return new Date(ano, mes - 1, dia);
+}
+
+function renderLogin() {
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Agiota Control PRO</h1>
+        <input type="text" id="email" placeholder="Email" class="border p-2 w-full mb-2">
+        <input type="password" id="senha" placeholder="Senha" class="border p-2 w-full mb-4">
+        <button id="entrar" class="bg-red-600 text-white px-4 py-2 rounded w-full">Entrar</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("entrar").onclick = () => {
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    if (!email || !senha) {
+      showToast("Preencha email e senha!");
+      return;
+    }
+    if (email === "agiota@local" && senha === "123456") {
+      if (!localStorage.getItem("saldoCapital")) {
+        renderDefinirSaldo();
+      } else {
+        localStorage.setItem("auth", "true");
+        renderMenu();
+      }
+    } else {
+      showToast("Credenciais inválidas!");
+    }
+  };
+}
+
+function renderDefinirSaldo() {
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Definir Saldo Inicial</h1>
+        <input type="number" id="saldo" placeholder="Saldo Capital (R$)" step="0.01" class="border p-2 w-full mb-4">
+        <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("salvarSaldo").onclick = () => {
+    const saldo = parseFloat(document.getElementById("saldo").value);
+    if (isNaN(saldo) || saldo < 0) {
+      showToast("Saldo deve ser um valor positivo!");
+      return;
+    }
+    localStorage.setItem("saldoCapital", saldo);
+    localStorage.setItem("auth", "true");
+    renderMenu();
+  };
+}
+
+function renderAlterarSaldo() {
+  const saldoAtual = parseFloat(localStorage.getItem("saldoCapital")) || 0;
+  app.innerHTML = `
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Alterar Saldo Capital</h1>
+        <input type="number" id="saldo" value="${saldoAtual}" placeholder="Saldo Capital (R$)" step="0.01" class="border p-2 w-full mb-4">
+        <button id="salvarSaldo" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+        <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded w-full mt-2">Voltar ao Menu</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("salvarSaldo").onclick = () => {
+    const saldo = parseFloat(document.getElementById("saldo").value);
+    if (isNaN(saldo) || saldo < 0) {
+      showToast("Saldo deve ser um valor positivo!");
+      return;
+    }
+    localStorage.setItem("saldoCapital", saldo);
+    showToast("Saldo atualizado com sucesso!", "success");
+    renderMenu();
+  };
+
+  document.getElementById("voltarMenu").onclick = () => renderMenu();
+}
+
+function renderMenu() {
+  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+  app.innerHTML = `
+    <div class="flex flex-col h-screen bg-yellow-100">
+      <div class="bg-white p-4 shadow flex justify-between items-center">
+        <h1 class="text-xl font-bold text-red-700">Agiota Control PRO</h1>
+        <button id="menuToggle" class="text-2xl">📋</button>
+      </div>
+      <div id="menu" class="hidden bg-white shadow w-64 fixed top-0 left-0 h-full p-4 z-50">
+        <button id="fecharMenu" class="text-xl mb-4">✖</button>
+        <div class="text-sm mb-4">Saldo: ${formatarMoeda(saldo)}</div>
+        <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
+        <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
+        <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-2 rounded w-full mb-2">Alterar Saldo</button>
+        <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-2 rounded w-full mb-2">Configurar Juros</button>
+        <button id="sair" class="block bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
+      </div>
+      <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+    </div>
+  `;
+
+  const menuToggle = document.getElementById("menuToggle");
+  const menu = document.getElementById("menu");
+  const fecharMenu = document.getElementById("fecharMenu");
+  const overlay = document.getElementById("overlay");
+
+  menuToggle.onclick = () => {
+    menu.classList.toggle("hidden");
+    overlay.classList.toggle("hidden");
+  };
+
+  fecharMenu.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+  };
+
+  document.getElementById("verDevedores").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderDevedores();
+  };
+
+  document.getElementById("gerarDivida").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderGerarDivida();
+  };
+
+  document.getElementById("alterarSaldo").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderAlterarSaldo();
+  };
+
+  document.getElementById("configurarJuros").onclick = () => {
+    menu.classList.add("hidden");
+    overlay.classList.add("hidden");
+    renderConfigurarJuros();
+  };
+
+  document.getElementById("sair").onclick = () => {
+    localStorage.removeItem("auth");
+    renderLogin();
+  };
+}
+
+function renderDevedores() {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+  const hoje = new Date();
+  const totalDevido = dividas.filter(d => !d.pago).reduce((sum, d) => {
+    const venc = new Date(d.vencimento);
+    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
+    const taxaDiaria = d.juros / 100 / 30;
+    const valorJuros = d.valor * taxaDiaria * diasAtraso;
+    return sum + (d.valor + valorJuros);
+  }, 0);
+  const saldoAtual = saldo + totalDevido;
+
+  app.innerHTML = `
+    <div class="p-4 max-w-4xl mx-auto">
+      <h1 class="text-2xl font-bold text-red-700 mb-4">📋 Lista de Devedores</h1>
+      <div class="text-right mb-4 text-sm">Saldo Atual: ${formatarMoeda(saldoAtual)}</div>
+      <div id="lista"></div>
+      <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
+    </div>
+  `;
+
+  renderListaDevedores(dividas);
+  document.getElementById("voltarMenu").onclick = () => renderMenu();
 }
 
 function renderListaDevedores(dividas) {
@@ -73,31 +251,28 @@ function renderListaDevedores(dividas) {
   }).join("");
 }
 
-function renderConfigurarJuros() {
-  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao")) || 20;
-  app.innerHTML = `
-    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
-      <div class="bg-white p-6 rounded shadow w-80">
-        <h1 class="text-xl font-bold mb-4 text-red-700">Configurar Juros Padrão</h1>
-        <input type="number" id="taxaJuros" value="${taxaPadrao}" min="10" max="50" step="1" class="border p-2 w-full mb-4" placeholder="Taxa mensal (%)">
-        <button id="salvarTaxa" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
-        <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded w-full mt-2">Voltar ao Menu</button>
-      </div>
-    </div>
-  `;
+function registrarPagamentoParcial(id, valorPago) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const divida = dividas.find(d => d.id === id);
+  if (divida && !divida.pago && valorPago > 0 && valorPago <= divida.valor) {
+    divida.valor -= valorPago;
+    adicionarHistorico(id, valorPago);
+    localStorage.setItem("dividas", JSON.stringify(dividas));
+    showToast("Pagamento parcial registrado!", "success");
+    renderDevedores();
+  } else {
+    showToast("Valor inválido ou dívida já paga!", "error");
+  }
+}
 
-  document.getElementById("salvarTaxa").onclick = () => {
-    const taxa = parseFloat(document.getElementById("taxaJuros").value);
-    if (isNaN(taxa) || taxa < 10 || taxa > 50) {
-      showToast("Taxa deve estar entre 10% e 50%!", "error");
-      return;
-    }
-    localStorage.setItem("taxaJurosPadrao", taxa);
-    showToast("Taxa de juros salva com sucesso!", "success");
-    renderMenu();
-  };
-
-  document.getElementById("voltarMenu").onclick = () => renderMenu();
+function adicionarHistorico(id, valorPago) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const divida = dividas.find(d => d.id === id);
+  if (divida) {
+    divida.historicoPagamentos = divida.historicoPagamentos || [];
+    divida.historicoPagamentos.push({ data: new Date().toLocaleDateString('pt-BR'), valor: valorPago });
+    localStorage.setItem("dividas", JSON.stringify(dividas));
+  }
 }
 
 function renderGerarDivida() {
@@ -173,79 +348,130 @@ function renderGerarDivida() {
   document.getElementById("voltarMenu").onclick = () => renderMenu();
 }
 
-// Atualiza renderMenu pra incluir a nova opção
-function renderMenu() {
-  const saldo = parseFloat(localStorage.getItem("saldoCapital") || 0);
+function renderConfigurarJuros() {
+  const taxaPadrao = parseFloat(localStorage.getItem("taxaJurosPadrao")) || 20;
   app.innerHTML = `
-    <div class="flex flex-col h-screen bg-yellow-100">
-      <div class="bg-white p-4 shadow flex justify-between items-center">
-        <h1 class="text-xl font-bold text-red-700">Agiota Control PRO</h1>
-        <button id="menuToggle" class="text-2xl">📋</button>
+    <div class="flex flex-col items-center justify-center h-screen bg-yellow-100">
+      <div class="bg-white p-6 rounded shadow w-80">
+        <h1 class="text-xl font-bold mb-4 text-red-700">Configurar Juros Padrão</h1>
+        <input type="number" id="taxaJuros" value="${taxaPadrao}" min="10" max="50" step="1" class="border p-2 w-full mb-4" placeholder="Taxa mensal (%)">
+        <button id="salvarTaxa" class="bg-green-600 text-white px-4 py-2 rounded w-full">Salvar</button>
+        <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded w-full mt-2">Voltar ao Menu</button>
       </div>
-      <div id="menu" class="hidden bg-white shadow w-64 fixed top-0 left-0 h-full p-4 z-50">
-        <button id="fecharMenu" class="text-xl mb-4">✖</button>
-        <div class="text-sm mb-4">Saldo: ${formatarMoeda(saldo)}</div>
-        <button id="verDevedores" class="block bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Ver Devedores</button>
-        <button id="gerarDivida" class="block bg-green-600 text-white px-4 py-2 rounded w-full mb-2">Gerar Dívida</button>
-        <button id="alterarSaldo" class="block bg-yellow-500 text-black px-4 py-2 rounded w-full mb-2">Alterar Saldo</button>
-        <button id="configurarJuros" class="block bg-purple-600 text-white px-4 py-2 rounded w-full mb-2">Configurar Juros</button>
-        <button id="sair" class="block bg-gray-300 px-4 py-2 rounded w-full">Sair</button>
-      </div>
-      <div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
     </div>
   `;
 
-  const menuToggle = document.getElementById("menuToggle");
-  const menu = document.getElementById("menu");
-  const fecharMenu = document.getElementById("fecharMenu");
-  const overlay = document.getElementById("overlay");
-
-  menuToggle.onclick = () => {
-    menu.classList.toggle("hidden");
-    overlay.classList.toggle("hidden");
+  document.getElementById("salvarTaxa").onclick = () => {
+    const taxa = parseFloat(document.getElementById("taxaJuros").value);
+    if (isNaN(taxa) || taxa < 10 || taxa > 50) {
+      showToast("Taxa deve estar entre 10% e 50%!", "error");
+      return;
+    }
+    localStorage.setItem("taxaJurosPadrao", taxa);
+    showToast("Taxa de juros salva com sucesso!", "success");
+    renderMenu();
   };
 
-  fecharMenu.onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
+  document.getElementById("voltarMenu").onclick = () => renderMenu();
+}
+
+function editarDivida(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const divida = dividas.find(d => d.id === id);
+
+  app.innerHTML = `
+    <div class="p-4 max-w-4xl mx-auto">
+      <h1 class="text-2xl font-bold text-red-700 mb-4">Editar Dívida</h1>
+      <div class="bg-white p-4 rounded shadow">
+        <input value="${divida.nome}" id="nome" class="border p-2 w-full mb-2">
+        <input value="${divida.numero || ''}" id="numero" class="border p-2 w-full mb-2">
+        <input value="${divida.valor}" id="valor" type="number" step="0.01" class="border p-2 w-full mb-2">
+        <input value="${divida.juros}" id="juros" type="number" min="20" max="30" class="border p-2 w-full mb-2">
+        <input value="${divida.data}" id="data" type="text" pattern="\d{2}/\d{2}/\d{4}" placeholder="dd/mm/aaaa" class="border p-2 w-full mb-2">
+        <button id="definirPrazo" class="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">Definir Prazo</button>
+        <select id="prazo" class="border p-2 w-full mb-2 hidden">
+          <option value="20" ${20 === (new Date(divida.vencimento) - new Date(divida.data.split('/').reverse().join('-'))) / (1000 * 60 * 60 * 24) ? 'selected' : ''}>20 dias</option>
+          <option value="30" ${30 === (new Date(divida.vencimento) - new Date(divida.data.split('/').reverse().join('-'))) / (1000 * 60 * 60 * 24) ? 'selected' : ''}>30 dias</option>
+        </select>
+        <button id="salvarDivida" class="bg-yellow-500 text-black px-4 py-2 rounded">Salvar</button>
+      </div>
+      <button id="voltarMenu" class="bg-gray-300 px-4 py-2 rounded mt-4">Voltar ao Menu</button>
+    </div>
+  `;
+
+  const definirPrazoBtn = document.getElementById("definirPrazo");
+  const prazoSelect = document.getElementById("prazo");
+  definirPrazoBtn.onclick = () => {
+    prazoSelect.classList.toggle("hidden");
+    if (!prazoSelect.classList.contains("hidden")) {
+      prazoSelect.focus();
+    }
   };
 
-  overlay.onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-  };
+  document.getElementById("salvarDivida").onclick = () => {
+    const nome = document.getElementById("nome").value.trim();
+    const numero = document.getElementById("numero").value.trim();
+    const valor = parseFloat(document.getElementById("valor").value);
+    const juros = parseInt(document.getElementById("juros").value);
+    const dataStr = document.getElementById("data").value.trim();
+    const prazo = document.getElementById("prazo").value;
+    const data = validarData(dataStr);
+    const [dia, mes, ano] = dataStr.split('/').map(Number);
+    const vencimento = new Date(ano, mes - 1, dia + parseInt(prazo)).toISOString().split('T')[0];
 
-  document.getElementById("verDevedores").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
+    if (!nome) {
+      showToast("Insira o nome do devedor!");
+      return;
+    }
+    if (isNaN(valor) || valor <= 0) {
+      showToast("Valor deve ser maior que zero!");
+      return;
+    }
+    if (isNaN(juros) || ![20, 30].includes(juros)) {
+      showToast("Juros deve ser 20% ou 30%!");
+      return;
+    }
+    if (!data) {
+      showToast("Data inválida! Use dd/mm/aaaa.");
+      return;
+    }
+    if (data >= new Date(vencimento)) {
+      showToast("Vencimento deve ser após o empréstimo!");
+      return;
+    }
+
+    const atualizadas = dividas.map(d => d.id === id ? { ...d, nome, numero, valor, juros, data: dataStr, vencimento } : d);
+    localStorage.setItem("dividas", JSON.stringify(atualizadas));
+    showToast("Dívida atualizada com sucesso!", "success");
     renderDevedores();
   };
 
-  document.getElementById("gerarDivida").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderGerarDivida();
-  };
-
-  document.getElementById("alterarSaldo").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderAlterarSaldo();
-  };
-
-  document.getElementById("configurarJuros").onclick = () => {
-    menu.classList.add("hidden");
-    overlay.classList.add("hidden");
-    renderConfigurarJuros();
-  };
-
-  document.getElementById("sair").onclick = () => {
-    localStorage.removeItem("auth");
-    renderLogin();
-  };
+  document.getElementById("voltarMenu").onclick = () => renderDevedores();
 }
 
-// ... (código existente de editarDivida, pagar, desmarcarPago, excluirDivida)
+function pagar(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const atualizadas = dividas.map(d => d.id === id ? { ...d, pago: true } : d);
+  localStorage.setItem("dividas", JSON.stringify(atualizadas));
+  showToast("Dívida marcada como paga!", "success");
+  renderDevedores();
+}
+
+function desmarcarPago(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const atualizadas = dividas.map(d => d.id === id ? { ...d, pago: false } : d);
+  localStorage.setItem("dividas", JSON.stringify(atualizadas));
+  showToast("Dívida marcada como não paga!", "success");
+  renderDevedores();
+}
+
+function excluirDivida(id) {
+  const dividas = JSON.parse(localStorage.getItem("dividas") || "[]");
+  const atualizadas = dividas.filter(d => d.id !== id);
+  localStorage.setItem("dividas", JSON.stringify(atualizadas));
+  showToast("Dívida excluída com sucesso!", "success");
+  renderDevedores();
+}
 
 if (!localStorage.getItem("auth")) {
   renderLogin();
