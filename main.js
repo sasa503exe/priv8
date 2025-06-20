@@ -136,12 +136,18 @@ function renderListaDevedores(dividas) {
 
   const hoje = new Date("2025-06-19T18:39:00-03:00"); // Data atual ajustada
   container.innerHTML = dividas.map(d => {
-    const venc = new Date(d.vencimento);
-    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24)));
+    const dataEmprestimo = validarData(d.data); // Data do empréstimo
+    const venc = new Date(d.vencimento); // Data de vencimento
+    const diasAtraso = Math.max(0, Math.floor((hoje - venc) / (1000 * 60 * 60 * 24))); // Dias após vencimento
+    const diasEmprestimo = Math.max(1, Math.floor((venc - dataEmprestimo) / (1000 * 60 * 60 * 24))); // Dias do empréstimo
     const vencido = hoje > venc;
-    const taxaDiaria = d.juros / 100 / 30; // Juros diário
-    const valorJuros = d.valor * taxaDiaria * diasAtraso;
-    const valorFinal = d.valor + valorJuros;
+
+    // Calcular juros para o período do empréstimo (ex.: 30% para 30 dias)
+    const taxaDiaria = d.juros / 100 / 30; // Juros mensal dividido por 30 dias
+    const valorJurosEmprestimo = d.valor * taxaDiaria * diasEmprestimo; // Juros até o vencimento
+    const valorJurosAtraso = d.valor * taxaDiaria * diasAtraso; // Juros por atraso
+    const valorJuros = vencido ? valorJurosEmprestimo + valorJurosAtraso : valorJurosEmprestimo; // Total de juros
+    const valorFinal = d.valor + valorJuros; // Total a pagar
 
     return `
       <div class="bg-white p-4 rounded shadow mb-2">
@@ -156,7 +162,7 @@ function renderListaDevedores(dividas) {
           ${!d.pago ? `<button onclick="pagar(${d.id})" class="bg-green-600 text-white px-3 py-1 rounded">Marcar pago</button>` : ''}
           <button onclick="editarDivida(${d.id})" class="bg-yellow-500 text-black px-3 py-1 rounded">Editar</button>
           <button onclick="excluirDivida(${d.id})" class="bg-red-600 text-white px-3 py-1 rounded">Excluir</button>
-          <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%A1%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
+          <a href="https://wa.me/${encodeURIComponent(d.numero || '')}?text=Oi%20${encodeURIComponent(d.nome)},%20voc%C3%AA%20est%C3%A1%20devendo%20${encodeURIComponent(formatarMoeda(valorFinal))}.%20Favor%20acertar." target="_blank" class="bg-yellow-500 text-black px-3 py-1 rounded">Cobrar no Zap</a>
         </div>
       </div>
     `;
